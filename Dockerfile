@@ -1,9 +1,10 @@
 FROM registry.access.redhat.com/ubi9/nginx-120
 
-COPY index.html /usr/share/nginx/html/index.html
+# Copia i contenuti dove nginx UBI se li aspetta
+COPY index.html /opt/app-root/src/
 
-# Permessi OpenShift-friendly
-RUN chgrp -R 0 /usr/share/nginx/html \
- && chmod -R g+rwX /usr/share/nginx/html
+# (opzionale, ma consigliato)
+RUN chgrp -R 0 /opt/app-root/src \
+ && chmod -R g+rwX /opt/app-root/src
 
 EXPOSE 8080
