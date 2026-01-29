@@ -1,22 +1,12 @@
-FROM httpd-24
+FROM registry.access.redhat.com/ubi9/httpd-24
 
-# Apache su porta non privilegiata
-RUN sed -i 's/Listen 80/Listen 8080/' /usr/local/apache2/conf/httpd.conf
+# UBI httpd ascolta già su 8080
+# DocumentRoot: /var/www/html
 
-# Permetti accesso al DocumentRoot standard
-RUN sed -i '/<Directory "\/usr\/local\/apache2\/htdocs">/,/<\/Directory>/ s/Require all denied/Require all granted/' \
-    /usr/local/apache2/conf/httpd.conf
+COPY index.html /var/www/html/index.html
+COPY demo.gif /var/www/html/demo.gif
 
-# Sovrascrive la index di default
-COPY index.html /usr/local/apache2/htdocs/index.html
-
-# (opzionale) gif locale
-COPY demo.gif /usr/local/apache2/htdocs/demo.gif
-
-# Permessi per OpenShift (UID random)
-RUN chgrp -R 0 /usr/local/apache2 \
- && chmod -R g=u /usr/local/apache2
+# Permessi compatibili con OpenShift (UID random)
+RUN chgrp -R 0 /var/www && chmod -R g=u /var/www
 
 EXPOSE 8080
-
-CMD ["httpd-foreground"]
