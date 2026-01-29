@@ -1,10 +1,7 @@
-FROM registry.access.redhat.com/ubi9/nginx-120
+FROM registry.redhat.io/ubi9/httpd-24
 
-# Copia i contenuti dove nginx UBI se li aspetta
-#COPY index.html /opt/app-root/src/
+# Add application sources
+ADD app-src/index.html /var/www/html/index.html
 
-# (opzionale, ma consigliato)
-#RUN chgrp -R 0 /opt/app-root/src \
-# && chmod -R g+rwX /opt/app-root/src
-
-#EXPOSE 8080
+# The run script uses standard ways to run the application
+CMD run-httpd
