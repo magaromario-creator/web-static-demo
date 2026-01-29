@@ -1,19 +1,41 @@
 apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
-  name: web-httpd-demo-git
+  generateName: web-httpd-demo-git-
   annotations:
-    pipelinesascode.tekton.dev/on-event: "[push]"
-    pipelinesascode.tekton.dev/on-target-branch: "[main]"
+    pipelinesascode.tekton.dev/repository: web-httpd-demo-git
+    pipelinesascode.tekton.dev/on-event: push
+    pipelinesascode.tekton.dev/on-target-branch: main
 spec:
+  workspaces:
+    - name: source
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 1Gi
+
   pipelineSpec:
     workspaces:
       - name: source
+
     tasks:
-      - name: build-image
+      - name: fetch-source
+        taskSpec:
+          workspaces:
+            - name: source
+          steps:
+            - name: git-clone
+              image: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8
+              script: |
+                git clone https://github.com/magaromario-creator/web-static-demo.git .
         workspaces:
           - name: source
             workspace: source
+
+      - name: build-image
+        runAfter: [fetch-source]
         taskSpec:
           workspaces:
             - name: source
@@ -24,13 +46,10 @@ spec:
                 privileged: true
               workingDir: $(workspaces.source.path)
               script: |
-                buildah bud -t image-registry.openshift-image-registry.svc:5000/webtest/web-httpd-demo-git:latest .
-                buildah push image-registry.openshift-image-registry.svc:5000/webtest/web-httpd-demo-git:latest
-  workspaces:
-    - name: source
-      volumeClaimTemplate:
-        spec:
-          accessModes: ["ReadWriteOnce"]
-          resources:
-            requests:
-              storage: 1Gi
+                buildah bud \
+                  -t image-registry.openshift-image-registry.svc:5000/webtest/web-httpd-demo-git:latest .
+                buildah push \
+                  image-registry.openshift-image-registry.svc:5000/webtest/web-httpd-demo-git:latest
+        workspaces:
+          - name: source
+            workspace: source
