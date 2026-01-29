@@ -1,7 +1,16 @@
-FROM registry.redhat.io/ubi9/httpd-24
+FROM httpd:2.4
 
-# Add application sources
-ADD app-src/index.html /var/www/html/index.html
+# Apache su porta non privilegiata
+RUN sed -i 's/Listen 80/Listen 8080/' /usr/local/apache2/conf/httpd.conf
 
-# The run script uses standard ways to run the application
-CMD run-httpd
+# Permetti accesso al DocumentRoot standard
+RUN sed -i '/<Directory "\/usr\/local\/apache2\/htdocs">/,/<\/Directory>/ s/Require all denied/Require all granted/' \
+    /usr/local/apache2/conf/httpd.conf
+
+# Permessi per OpenShift (UID random)
+RUN chgrp -R 0 /usr/local/apache2 \
+ && chmod -R g=u /usr/local/apache2
+
+EXPOSE 8080
+
+CMD ["httpd-foreground"]
