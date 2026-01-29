@@ -1,0 +1,36 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: web-httpd-demo-git
+  annotations:
+    pipelinesascode.tekton.dev/on-event: "[push]"
+    pipelinesascode.tekton.dev/on-target-branch: "[main]"
+spec:
+  pipelineSpec:
+    workspaces:
+      - name: source
+    tasks:
+      - name: build-image
+        workspaces:
+          - name: source
+            workspace: source
+        taskSpec:
+          workspaces:
+            - name: source
+          steps:
+            - name: build-and-push
+              image: quay.io/buildah/stable:v1.34
+              securityContext:
+                privileged: true
+              workingDir: $(workspaces.source.path)
+              script: |
+                buildah bud -t image-registry.openshift-image-registry.svc:5000/webtest/web-httpd-demo-git:latest .
+                buildah push image-registry.openshift-image-registry.svc:5000/webtest/web-httpd-demo-git:latest
+  workspaces:
+    - name: source
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 1Gi
