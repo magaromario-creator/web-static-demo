@@ -7,4 +7,4 @@ FROM registry.access.redhat.com/ubi9/nginx-120
 #RUN chgrp -R 0 /opt/app-root/src \
 # && chmod -R g+rwX /opt/app-root/src
 
-EXPOSE 8080
+#EXPOSE 8080
