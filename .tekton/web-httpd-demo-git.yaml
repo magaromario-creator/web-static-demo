@@ -1,18 +1,14 @@
 apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
-  generateName: web-httpd-demo-git-
+  name: web-httpd-demo-git
   annotations:
-    # Repository PaC (deve combaciare con il CR Repository)
+    # 🔑 QUESTA È LA CHIAVE
     pipelinesascode.tekton.dev/repository: web-httpd-demo-git
 
-    # Eventi da intercettare
-    pipelinesascode.tekton.dev/on-event: push
-    pipelinesascode.tekton.dev/on-target-branch: main
-
-    # 🔑 FONDAMENTALE SU CRC
-    pipelinesascode.tekton.dev/polling: "true"
-    pipelinesascode.tekton.dev/polling-interval: "1m"
+    # eventi
+    pipelinesascode.tekton.dev/on-event: "[push]"
+    pipelinesascode.tekton.dev/on-target-branch: "[main]"
 
 spec:
   pipelineSpec:
@@ -20,7 +16,7 @@ spec:
       - name: source
 
     tasks:
-      - name: build-and-push-image
+      - name: build-image
         workspaces:
           - name: source
             workspace: source
@@ -36,11 +32,8 @@ spec:
                 privileged: true
               workingDir: $(workspaces.source.path)
               script: |
-                echo "🔧 Building image..."
                 buildah bud \
                   -t image-registry.openshift-image-registry.svc:5000/webtest/web-httpd-demo-git:latest .
-
-                echo "📦 Pushing image..."
                 buildah push \
                   image-registry.openshift-image-registry.svc:5000/webtest/web-httpd-demo-git:latest
 
