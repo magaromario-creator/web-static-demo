@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/httpd-24
+FROM httpd-24
 
 # Apache su porta non privilegiata
 RUN sed -i 's/Listen 80/Listen 8080/' /usr/local/apache2/conf/httpd.conf
